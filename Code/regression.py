@@ -37,9 +37,12 @@ scoring = 'neg_median_absolute_error'
 # Attribute to predict
 outvar = "Avg_Execution_Time"
 
+# Validation set size as percentage of input data
+valpct = 0.2
+
 modelprefix='Model_'
 
-def get_data_splits(scalefactor, distribution, querytype, inattr, outattr):
+def get_data_splits(scalefactor, distribution, querytype, inattr, outattr, valpct):
     df = pd.read_csv(Path(sys.path[0] + '/../Results') / ('SF' + str(scalefactor) + '_' + distribution + '.csv'))
     df1 = df.loc[df['Model_Num'] == (modelprefix + querytype + "_" + inattr)]
 
@@ -48,7 +51,7 @@ def get_data_splits(scalefactor, distribution, querytype, inattr, outattr):
     X_all = X_all.drop(columns = ['Range_Max'])
     Y_all = df1[[outattr]]
 
-    X, X_test, Y, Y_test = train_test_split(X_all, Y_all, test_size = 0.2)
+    X, X_test, Y, Y_test = train_test_split(X_all, Y_all, test_size = valpct)
     return (X, X_test, Y.values.ravel(), Y_test.values.ravel())
 
 def find_best_estimator(X, Y, num_folds, scoring, verbose):
@@ -192,13 +195,14 @@ parser.add_argument('--inattr',       '-i', help = 'Query constraint attribute',
 parser.add_argument('--outvar',       '-o', help = 'Dependent variable to predict', default = outvar , type = str, choices=['Avg_Execution_Time', 'Result_Set_Returned'])
 parser.add_argument('--folds',        '-f', help = 'Number of folds to use in cross-validation', default = num_folds, type = utils.check_nonneg)
 parser.add_argument('--scoring',      '-s', help = 'Scoring function to use in GridSearchCV', default = scoring, type = str, choices=['neg_median_absolute_error','neg_mean_absolute_error','neg_mean_squared_error', 'explained_variance', 'r2'])
+parser.add_argument('--valpct',       '-p', help = 'Percentage of input data to use as the validation set', default = valpct, type = utils.check_01)
 parser.add_argument('--verbose',      '-v', help = 'Turn logging on; specify multiple times for more verbosity', action = 'count')
 
 args = parser.parse_args()
 if args.verbose == None:
     args.verbose = 0
 
-X, X_test, Y, Y_test = get_data_splits(args.scalefactor, args.distribution, args.querytype, args.inattr, args.outvar)
+X, X_test, Y, Y_test = get_data_splits(args.scalefactor, args.distribution, args.querytype, args.inattr, args.outvar, args.valpct)
 model, is_scaled = find_best_estimator(X, Y, args.folds, args.scoring, args.verbose)
 predictions, scores = run_test(model, is_scaled, X_test, Y_test)
 
@@ -209,5 +213,4 @@ print("    Mean squared error   : " + str(scores['mse']))
 print("    Explained variance   : " + str(scores['ev']))
 print("    R^2 score            : " + str(scores['r2']))
 
-compare = pd.DataFrame({'Prediction': predictions, 'Validation Data' : Y_test})
-print(compare)
+print(pd.DataFrame({'Prediction': predictions, 'Validation Data' : Y_test}))
