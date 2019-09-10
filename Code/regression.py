@@ -185,7 +185,7 @@ def run_test(best_model, is_scaled, X_test, Y_test):
 
 # Parse Arguments
 parser=argparse.ArgumentParser(description='TPC-H query runtime/result set size predictor', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--distribution', '-D', help = 'Select a distribution uniform or zipf', default = distribution, type = str, choices=['Uniform','Zipf'])
+parser.add_argument('--distribution', '-D', help = 'Select a distribution uniform or zipf', default = distribution, type = str, choices=['Uniform','Zipf', 'All'])
 parser.add_argument('--scalefactor',  '-F', help = 'TPCH scalefactor', default = scalefactor, type = int, choices=[1, 10, 100])
 parser.add_argument('--querytype',    '-t', help = 'Query type for which to build the model', default = querytype, type = str, choices=['RANGE', 'JOIN'])
 parser.add_argument('--inattr',       '-i', help = 'Query constraint attribute', default = queryattr, type = str, choices=['o_orderkey','o_totalprice','l_orderkey', 'l_extendedprice'])
